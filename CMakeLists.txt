@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 3.20)
 
 include(ExternalProject)
 include(GNUInstallDirs)
@@ -35,8 +35,8 @@ CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/src/pHash.h.cmake ${CMAKE_CURRENT_SOU
 if(NOT WIN32)
        set(MMAN_FILE "")
        set(DIRENT_FILE "")
-    EXEC_PROGRAM(uname ARGS -m OUTPUT_VARIABLE BUILD_SYSTEM)
-    EXEC_PROGRAM(uname ARGS -s OUTPUT_VARIABLE CMAKE_SYSTEM_NAME)
+    EXECUTE_PROCESS(COMMAND uname -m OUTPUT_VARIABLE BUILD_SYSTEM)
+    EXECUTE_PROCESS(COMMAND uname -s OUTPUT_VARIABLE CMAKE_SYSTEM_NAME)
 else()
     set(MMAN_FILE "win/mman.cpp")
     set(DIRENT_FILE "win/dirent.cpp")

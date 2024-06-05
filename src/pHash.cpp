@@ -714,7 +714,7 @@ TxtHashPoint *ph_texthash(const char *filename, int *nbpoints) {
     int count;
     TxtHashPoint *TxtHash = NULL;
     TxtHashPoint WinHash[WindowLength];
-    char kgram[KgramLength];
+    unsigned char kgram[KgramLength];
 
     FILE *pfile = fopen(filename, "r");
     if (!pfile) {
@@ -737,7 +737,7 @@ TxtHashPoint *ph_texthash(const char *filename, int *nbpoints) {
     int win_index = 0;
     for (i = 0; i < KgramLength; i++) { /* calc first kgram */
         d = fgetc(pfile);
-        if (d == EOF) {
+        if (d <= EOF) {
             free(TxtHash);
             return NULL;
         }
@@ -749,7 +749,7 @@ TxtHashPoint *ph_texthash(const char *filename, int *nbpoints) {
         if ((d >= 65) && (d <= 90)) /*convert upper to lower case */
             d = d + 32;
 
-        kgram[i] = (char)d;
+        kgram[i] = (unsigned char)d;
         hashword = hashword << delta;      /* rotate left or shift left ??? */
         hashword = hashword ^ textkeys[d]; /* right now, rotate breaks it */
     }
@@ -765,7 +765,7 @@ TxtHashPoint *ph_texthash(const char *filename, int *nbpoints) {
 
     while ((d = fgetc(pfile)) != EOF) { /*remaining kgrams */
         text_index++;
-        if (d == EOF) {
+        if (d <= EOF) {
             free(TxtHash);
             return NULL;
         }
@@ -777,7 +777,7 @@ TxtHashPoint *ph_texthash(const char *filename, int *nbpoints) {
         if ((d >= 65) && (d <= 90)) /*convert upper to lower case */
             d = d + 32;
 
-        ulong64 oldsym = textkeys[kgram[first % KgramLength]];
+        ulong64 oldsym = textkeys[(size_t)kgram[first % KgramLength]];
 
         /* rotate or left shift ??? */
         /* right now, rotate breaks it */
@@ -785,7 +785,7 @@ TxtHashPoint *ph_texthash(const char *filename, int *nbpoints) {
         hashword = hashword << delta;
         hashword = hashword ^ textkeys[d];
         hashword = hashword ^ oldsym;
-        kgram[last % KgramLength] = (char)d;
+        kgram[last % KgramLength] = (unsigned char)d;
         first++;
         last++;
 
