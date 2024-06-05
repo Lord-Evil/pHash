@@ -302,6 +302,7 @@ static CImg<float> ph_dct_matrix(const int N) {
 }
 
 static const CImg<float> dct_matrix = ph_dct_matrix(32);
+static const CImg<float> Ctransp = dct_matrix.get_transpose();
 int ph_dct_imagehash(const char *file, ulong64 &hash) {
     if (!file) {
         return -1;
@@ -329,9 +330,9 @@ int ph_dct_imagehash(const char *file, ulong64 &hash) {
 
     img.resize(32, 32);
     const CImg<float> &C = dct_matrix;
-    CImg<float> Ctransp = C.get_transpose();
+    const CImg<float> &Ct = Ctransp;
 
-    CImg<float> dctImage = (C)*img * Ctransp;
+    CImg<float> dctImage = C * img * Ct;
 
     CImg<float> subsec = dctImage.crop(1, 1, 8, 8).unroll('x');
 
@@ -534,7 +535,7 @@ ulong64 *ph_dct_videohash(const char *filename, int &Length) {
 
     ulong64 *hash = (ulong64 *)malloc(sizeof(ulong64) * Length);
     const CImg<float> &C = dct_matrix;
-    CImg<float> Ctransp = C.get_transpose();
+    const CImg<float> &Ct = Ctransp;
     CImg<float> dctImage;
     CImg<float> subsec;
     CImg<uint8_t> currentframe;
@@ -542,7 +543,7 @@ ulong64 *ph_dct_videohash(const char *filename, int &Length) {
     for (unsigned int i = 0; i < keyframes->size(); i++) {
         currentframe = keyframes->at(i);
         currentframe.blur(1.0);
-        dctImage = (C) * (currentframe)*Ctransp;
+        dctImage = C * currentframe * Ct;
         subsec = dctImage.crop(1, 1, 8, 8).unroll('x');
         float med = subsec.median();
         hash[i] = 0x0000000000000000;
