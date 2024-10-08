@@ -303,6 +303,7 @@ static CImg<float> ph_dct_matrix(const int N) {
 
 static const CImg<float> dct_matrix = ph_dct_matrix(32);
 static const CImg<float> Ctransp = dct_matrix.get_transpose();
+static const CImg<float> meanfilter(7, 7, 1, 1, 1);
 int ph_dct_imagehash(const char *file, ulong64 &hash) {
     if (!file) {
         return -1;
@@ -313,7 +314,6 @@ int ph_dct_imagehash(const char *file, ulong64 &hash) {
     } catch (CImgIOException &ex) {
         return -1;
     }
-    CImg<float> meanfilter(7, 7, 1, 1, 1);
     CImg<float> img;
     if (src.spectrum() == 3) {
         img = src.RGBtoYCbCr().channel(0).get_convolve(meanfilter);
