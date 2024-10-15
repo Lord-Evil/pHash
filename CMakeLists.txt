@@ -1,13 +1,16 @@
 cmake_minimum_required (VERSION 3.20)
 
-include(ExternalProject)
-include(GNUInstallDirs)
-
 project(pHash)
 set(CMAKE_MACOSX_RPATH 1)
 set(pHash_VERSION_MAJOR 1)
 set(pHash_VERSION_MINOR 0)
 set(pHash_VERSION_PATCH 0)
+
+enable_language(C CXX)
+set(CMAKE_CXX_STANDARD 20)
+
+include(ExternalProject)
+include(GNUInstallDirs)
 
 OPTION(PHASH_DYNAMIC   "Build pHash dynamic library"                     ON)
 OPTION(PHASH_STATIC    "Build pHash static library"                     OFF)
@@ -60,7 +63,7 @@ link_directories(/usr/local/lib)
 include_directories(/usr/local/include)
 
 
-set(LIBS_DEPS png z jpeg tiff heif)
+set(LIBS_DEPS png z jpeg tiff heif webp)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
