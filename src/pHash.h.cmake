@@ -57,6 +57,7 @@
 #define cimg_use_tiff 1
 #define cimg_use_heif 1
 #define cimg_use_webp 1
+#define cimg_use_jxl 1
 #define cimg_debug 0
 #define cimg_display 0
 #include "CImg.h"

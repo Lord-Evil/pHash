@@ -63,7 +63,7 @@ link_directories(/usr/local/lib)
 include_directories(/usr/local/include)
 
 
-set(LIBS_DEPS png z jpeg tiff heif webp)
+set(LIBS_DEPS png z jpeg tiff heif webp jxl)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
