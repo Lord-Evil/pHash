@@ -38,6 +38,17 @@ const char *ph_about() {
              PACKAGE_STRING);
     return phash_version;
 }
+
+#define PHASH_STR1(n) #n
+#define PHASH_STR(n) PHASH_STR1(n)
+#define PHASH_VERSION_CONCAT1(major, minor, patch) (PHASH_STR(major) "." PHASH_STR(minor) "." PHASH_STR(patch))
+#define PHASH_VERSION_CONCAT(major, minor, patch) PHASH_VERSION_CONCAT1(major, minor, patch)
+
+const char* ph_version() {
+    static const char *version = PHASH_VERSION_CONCAT(PHASH_VERSION_MAJOR, PHASH_VERSION_MINOR, PHASH_VERSION_PATCH);
+    return version;
+}
+
 #ifdef HAVE_IMAGE_HASH
 int ph_radon_projections(const CImg<uint8_t> &img, int N, Projections &projs) {
     int width = img.width();
