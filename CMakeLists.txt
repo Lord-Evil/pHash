@@ -1,13 +1,16 @@
-cmake_minimum_required (VERSION 2.8)
-
-include(ExternalProject)
-include(GNUInstallDirs)
+cmake_minimum_required (VERSION 3.20)
 
 project(pHash)
 set(CMAKE_MACOSX_RPATH 1)
 set(pHash_VERSION_MAJOR 1)
 set(pHash_VERSION_MINOR 0)
 set(pHash_VERSION_PATCH 0)
+
+enable_language(C CXX)
+set(CMAKE_CXX_STANDARD 20)
+
+include(ExternalProject)
+include(GNUInstallDirs)
 
 OPTION(PHASH_DYNAMIC   "Build pHash dynamic library"                     ON)
 OPTION(PHASH_STATIC    "Build pHash static library"                     OFF)
@@ -35,8 +38,8 @@ CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/src/pHash.h.cmake ${CMAKE_CURRENT_SOU
 if(NOT WIN32)
        set(MMAN_FILE "")
        set(DIRENT_FILE "")
-    EXEC_PROGRAM(uname ARGS -m OUTPUT_VARIABLE BUILD_SYSTEM)
-    EXEC_PROGRAM(uname ARGS -s OUTPUT_VARIABLE CMAKE_SYSTEM_NAME)
+    EXECUTE_PROCESS(COMMAND uname -m OUTPUT_VARIABLE BUILD_SYSTEM)
+    EXECUTE_PROCESS(COMMAND uname -s OUTPUT_VARIABLE CMAKE_SYSTEM_NAME)
 else()
     set(MMAN_FILE "win/mman.cpp")
     set(DIRENT_FILE "win/dirent.cpp")
@@ -60,7 +63,7 @@ link_directories(/usr/local/lib)
 include_directories(/usr/local/include)
 
 
-set(LIBS_DEPS png z jpeg tiff)
+set(LIBS_DEPS png z jpeg tiff heif webp jxl)
 
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)

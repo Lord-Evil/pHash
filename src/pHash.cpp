@@ -38,6 +38,17 @@ const char *ph_about() {
              PACKAGE_STRING);
     return phash_version;
 }
+
+#define PHASH_STR1(n) #n
+#define PHASH_STR(n) PHASH_STR1(n)
+#define PHASH_VERSION_CONCAT1(major, minor, patch) (PHASH_STR(major) "." PHASH_STR(minor) "." PHASH_STR(patch))
+#define PHASH_VERSION_CONCAT(major, minor, patch) PHASH_VERSION_CONCAT1(major, minor, patch)
+
+const char* ph_version() {
+    static const char *version = PHASH_VERSION_CONCAT(PHASH_VERSION_MAJOR, PHASH_VERSION_MINOR, PHASH_VERSION_PATCH);
+    return version;
+}
+
 #ifdef HAVE_IMAGE_HASH
 int ph_radon_projections(const CImg<uint8_t> &img, int N, Projections &projs) {
     int width = img.width();
@@ -218,7 +229,11 @@ int _ph_image_digest(const CImg<uint8_t> &img, double sigma, double gamma,
                      Digest &digest, int N) {
     int result = EXIT_FAILURE;
     CImg<uint8_t> graysc;
-    if (img.spectrum() >= 3) {
+    // fix alpha channel issue: https://github.com/aetilius/pHash/pull/40
+    if (img.spectrum() > 3) {
+        CImg<> rgb = img.get_shared_channels(0, 2);
+        graysc = rgb.RGBtoYCbCr().channel(0);
+    } else if (img.spectrum() == 3) {
         graysc = img.get_RGBtoYCbCr().channel(0);
     } else if (img.spectrum() == 1) {
         graysc = img;
@@ -302,6 +317,8 @@ static CImg<float> ph_dct_matrix(const int N) {
 }
 
 static const CImg<float> dct_matrix = ph_dct_matrix(32);
+static const CImg<float> Ctransp = dct_matrix.get_transpose();
+static const CImg<float> meanfilter(7, 7, 1, 1, 1);
 int ph_dct_imagehash(const char *file, ulong64 &hash) {
     if (!file) {
         return -1;
@@ -312,7 +329,6 @@ int ph_dct_imagehash(const char *file, ulong64 &hash) {
     } catch (CImgIOException &ex) {
         return -1;
     }
-    CImg<float> meanfilter(7, 7, 1, 1, 1);
     CImg<float> img;
     if (src.spectrum() == 3) {
         img = src.RGBtoYCbCr().channel(0).get_convolve(meanfilter);
@@ -329,9 +345,9 @@ int ph_dct_imagehash(const char *file, ulong64 &hash) {
 
     img.resize(32, 32);
     const CImg<float> &C = dct_matrix;
-    CImg<float> Ctransp = C.get_transpose();
+    const CImg<float> &Ct = Ctransp;
 
-    CImg<float> dctImage = (C)*img * Ctransp;
+    CImg<float> dctImage = C * img * Ct;
 
     CImg<float> subsec = dctImage.crop(1, 1, 8, 8).unroll('x');
 
@@ -534,7 +550,7 @@ ulong64 *ph_dct_videohash(const char *filename, int &Length) {
 
     ulong64 *hash = (ulong64 *)malloc(sizeof(ulong64) * Length);
     const CImg<float> &C = dct_matrix;
-    CImg<float> Ctransp = C.get_transpose();
+    const CImg<float> &Ct = Ctransp;
     CImg<float> dctImage;
     CImg<float> subsec;
     CImg<uint8_t> currentframe;
@@ -542,7 +558,7 @@ ulong64 *ph_dct_videohash(const char *filename, int &Length) {
     for (unsigned int i = 0; i < keyframes->size(); i++) {
         currentframe = keyframes->at(i);
         currentframe.blur(1.0);
-        dctImage = (C) * (currentframe)*Ctransp;
+        dctImage = C * currentframe * Ct;
         subsec = dctImage.crop(1, 1, 8, 8).unroll('x');
         float med = subsec.median();
         hash[i] = 0x0000000000000000;
@@ -713,7 +729,7 @@ TxtHashPoint *ph_texthash(const char *filename, int *nbpoints) {
     int count;
     TxtHashPoint *TxtHash = NULL;
     TxtHashPoint WinHash[WindowLength];
-    char kgram[KgramLength];
+    unsigned char kgram[KgramLength];
 
     FILE *pfile = fopen(filename, "r");
     if (!pfile) {
@@ -736,7 +752,7 @@ TxtHashPoint *ph_texthash(const char *filename, int *nbpoints) {
     int win_index = 0;
     for (i = 0; i < KgramLength; i++) { /* calc first kgram */
         d = fgetc(pfile);
-        if (d == EOF) {
+        if (d <= EOF) {
             free(TxtHash);
             return NULL;
         }
@@ -748,7 +764,7 @@ TxtHashPoint *ph_texthash(const char *filename, int *nbpoints) {
         if ((d >= 65) && (d <= 90)) /*convert upper to lower case */
             d = d + 32;
 
-        kgram[i] = (char)d;
+        kgram[i] = (unsigned char)d;
         hashword = hashword << delta;      /* rotate left or shift left ??? */
         hashword = hashword ^ textkeys[d]; /* right now, rotate breaks it */
     }
@@ -764,7 +780,7 @@ TxtHashPoint *ph_texthash(const char *filename, int *nbpoints) {
 
     while ((d = fgetc(pfile)) != EOF) { /*remaining kgrams */
         text_index++;
-        if (d == EOF) {
+        if (d <= EOF) {
             free(TxtHash);
             return NULL;
         }
@@ -776,7 +792,7 @@ TxtHashPoint *ph_texthash(const char *filename, int *nbpoints) {
         if ((d >= 65) && (d <= 90)) /*convert upper to lower case */
             d = d + 32;
 
-        ulong64 oldsym = textkeys[kgram[first % KgramLength]];
+        ulong64 oldsym = textkeys[(size_t)kgram[first % KgramLength]];
 
         /* rotate or left shift ??? */
         /* right now, rotate breaks it */
@@ -784,7 +800,7 @@ TxtHashPoint *ph_texthash(const char *filename, int *nbpoints) {
         hashword = hashword << delta;
         hashword = hashword ^ textkeys[d];
         hashword = hashword ^ oldsym;
-        kgram[last % KgramLength] = (char)d;
+        kgram[last % KgramLength] = (unsigned char)d;
         first++;
         last++;
 

@@ -1,3 +1,9 @@
+1.0.2
+---
+Fix alpha channel issue: https://github.com/aetilius/pHash/pull/40
+Add ph_version
+Support WebP, AVIF and JPEG XL
+
 1.0.1
 ---
 Clean up rounding logic

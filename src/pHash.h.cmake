@@ -25,6 +25,9 @@
 #ifndef _PHASH_H
 #define _PHASH_H
 
+#define PHASH_VERSION_MAJOR 1
+#define PHASH_VERSION_MINOR 0
+#define PHASH_VERSION_PATCH 2
 
 #include <limits.h>
 #include <math.h>
@@ -55,6 +58,9 @@
 #define cimg_use_png 1
 #define cimg_use_jpeg 1
 #define cimg_use_tiff 1
+#define cimg_use_heif 1
+#define cimg_use_webp 1
+#define cimg_use_jxl 1
 #define cimg_debug 0
 #define cimg_display 0
 #include "CImg.h"
@@ -139,6 +145,10 @@ typedef struct ph_match{
 /*! /brief copyright information
  */
 const char* ph_about();
+
+/*! /brief version information
+ */
+const char* ph_version();
 
 /*! /brief radon function
  *  Find radon projections of N lines running through the image center for lines angled 0
