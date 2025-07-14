@@ -36,6 +36,7 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
+#include <libavutil/imgutils.h>
 }
 
 using namespace cimg_library;
@@ -50,7 +51,7 @@ typedef struct vf_info {
     long next_index;
     AVFormatContext *pFormatCtx;
     AVCodecContext *pCodecCtx;
-    AVCodec *pCodec;
+    const AVCodec *pCodec;
     const char *filename;
 } VFInfo;
 
